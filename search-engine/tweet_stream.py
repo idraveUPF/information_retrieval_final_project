@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_secret)
-    twitter_stream = Stream(auth, MyListener())
+    twitter_stream = Stream(auth, MyListener(10))
     twitter_stream.filter(track=KEYWORDS, languages=['en']) # Add your keywords and other filters
 
     print('_______ End _______')
