@@ -2,6 +2,9 @@ import simplejson as json
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+from utils import get_terms
+import argparse
+import nltk
 
 class MyListener(StreamListener):
     
@@ -18,11 +21,11 @@ class MyListener(StreamListener):
                 filter_data = {}
                 if 'extended_tweet' in jdata: 
                     filter_data['Tweet_text'] = jdata['extended_tweet']['full_text']
-                    filter_data['Hashtags'] = jdata['extended_tweet']['entities']['hashtags']
-                else: 
+                    hashtags = jdata['extended_tweet']['entities']['hashtags']
+                else:
                     filter_data['Tweet_text'] = jdata['text']
-                    filter_data['Hashtags'] = jdata['entities']['hashtags']
-                
+                    hashtags = jdata['entities']['hashtags']
+                filter_data['Hashtags'] = [ht['text'] for ht in hashtags]
                 filter_data['Username'] = jdata['user']['screen_name']
                 filter_data['ID'] = jdata['id']
                 filter_data['Date'] = jdata['created_at']
@@ -33,13 +36,13 @@ class MyListener(StreamListener):
                     filter_data['is_Retweeted'] = True 
                     filter_data['Tweet_Retweeted'] = jdata['retweeted_status']['id']
                 else: 
-                    filter_data['is_Retweeted'] = False 
-                                           
-                                           
+                    filter_data['is_Retweeted'] = False
+
+                filter_data['terms'] = get_terms(filter_data['Tweet_text'])
                 print(filter_data)
                 
                 self.num_tweets += 1
-                f.write(json.dumps(filter_data))
+                f.write(json.dumps(filter_data)+'\n')
 
                 # Setting a limit in the number of tweets collected
                 if self.num_tweets < self.max_tweets:
@@ -57,7 +60,13 @@ class MyListener(StreamListener):
 
 KEYWORDS = ["BlackLivesMatter", "AllLivesMatter", "BlueLivesMatter", "BLM", "blackpower", "blackpride", "africanamerican", "racism", "blackhistory", "equality", "policebrutality"]
 
+def parse_args():
+    pass
+
+
 if __name__ == '__main__':
+    nltk.download('stopwords')
+
     consumer_key = 'UPtQiALNjB7rWxcIY8CB9IXmb'
     consumer_secret = 'lsU5NELQCDfE7eGs0f2fraobK34LoF7X0OSreaOAdLR7n7uwv8'
     access_token = '3796381515-0VrTXAZlasSMTWGlYBDa5djTsKjS6hl1eqrHmIt'
@@ -65,7 +74,7 @@ if __name__ == '__main__':
 
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_secret)
-    twitter_stream = Stream(auth, MyListener(10))
+    twitter_stream = Stream(auth, MyListener(5))
     twitter_stream.filter(track=KEYWORDS, languages=['en']) # Add your keywords and other filters
 
     print('_______ End _______')
