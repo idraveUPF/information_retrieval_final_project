@@ -1,1 +1,6 @@
 .idea/
+search-engine/test.py
+search-engine/Output.json
+search-engine/index.pickle
+/res
+*/__pycache__/*

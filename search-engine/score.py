@@ -19,7 +19,6 @@ def cosine_similarity(a, b, norm_a=True, norm_b=True):
         sum_a = math.sqrt(sum_a)
     if norm_b:
         sum_b = math.sqrt(sum_b)
-    print(total, sum_a, sum_b)
     return total / (sum_a * sum_b)
 
 class TfIdfScorer:
@@ -34,8 +33,6 @@ class TfIdfScorer:
         for i in range(len(query_tf)):
             tweet_v.append(tweet_tf[i] * idfs[i])
             query_v.append(query_tf[i] * idfs[i])
-        print(tweet_tf)
-        print(query_tf)
         return cosine_similarity(tweet_v, query_v, norm_a=normalize, norm_b=normalize) # assume get_tf normalizes
 
 class CustomScorer:

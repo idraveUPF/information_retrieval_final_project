@@ -50,10 +50,9 @@ class Index:
         for line in lines: # Remember, lines contain all tweets, each line is a tweet
             tweet_json = json.loads(line)
             tweet = Tweet(
-                tweet_json['ID'], tweet_json['Tweet_text'], tweet_json['Username'],
+                tweet_json['ID'], tweet_json['Tweet_text'], tweet_json['UserId'],
                 tweet_json['Date'], tweet_json['URL'], tweet_json['Hashtags'],
-                tweet_json['Likes'], tweet_json['Number_Retweets'], tweet_json['terms'],
-                tweet_json['is_Retweeted'], retweeted=tweet_json.get('Tweet_Retweeted', None)
+                tweet_json['Likes'], tweet_json['Number_Retweets'], tweet_json['terms']
             )
             self.tweets[tweet.id] = tweet
             tweet_id = tweet.id #tweet id
@@ -143,7 +142,10 @@ class Index:
                 # store in termDocs the ids of the docs that contain "term"
                 termTweets=[posting[0] for posting in self.index[term]]
                 # docs = docs Union termDocs
-                list_tweets = list_tweets.union(termTweets)
+                if len(list_tweets) == 0:
+                    list_tweets = list_tweets.union(termTweets)
+                else:
+                    list_tweets = list_tweets.intersection(termTweets)
             except:
                 #term is not in index
                 pass
