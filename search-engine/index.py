@@ -15,6 +15,7 @@ class Index:
         self.tf = None
         self.df = None
         self.tweets = {}
+        self.term_id = {}
 
     def load_json_tweets(self, file):
         with open(file, 'r') as fp:
@@ -76,6 +77,8 @@ class Index:
             termdictTweets={}
 
             for position, term in enumerate(terms): # terms contains page_title + page_text. Loop over all terms
+                if term not in self.term_id:
+                    self.term_id[term] = len(self.term_id)
                 try:
                     # if the term is already in the index for the current page (termdictPage)
                     # append the position to the corrisponding list
@@ -124,13 +127,36 @@ class Index:
 
     #Given a query (set of words) and and index return the total tf of that query 
     def get_tf(self, query, tweet_id):
-
         query=query.get_terms()
         global_tf_list=[]
         term_list=[]
         for term in query:
             term_list.append(self.tf[term][tweet_id])
         return term_list
+
+    def get_tf_idf_vector(self, tweet_id):
+        vector = np.zeros(len(self.index))
+        N = len(self.tweets)
+        total = 0
+        for term in self.tweets[tweet_id].terms:
+            tf = self.tf[term].get(tweet_id, 0)
+            df = self.df[term]
+            tf_idf = tf * math.log(N / df)
+            vector[self.term_id[term]] = tf_idf
+        norm = np.linalg.norm(vector)
+        if norm == 0:
+            return None
+        return vector / norm
+
+    def get_all_tf_idf(self):
+        vectors = np.array([])
+        for tweet in self.tweets:
+            v = self.get_tf_idf_vector(tweet)
+            if isinstance(v, np.ndarray):
+                vectors = np.vstack((vectors, v))
+            if len(vectors) % 1000 == 0:
+                print(len(vectors))
+        return vectors
 
     #Given a query (set of words) return all the tweets containing the query
     def get_tweets(self, query):

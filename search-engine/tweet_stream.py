@@ -10,7 +10,7 @@ import nltk
 import time
 
 class MyListener(StreamListener):
-    
+    USER_FREQ = 100
     def __init__(self, max_tweets, output_file=None, user_file=None):
         super(StreamListener, self).__init__()
         self.num_tweets = 0
@@ -36,18 +36,23 @@ class MyListener(StreamListener):
                 print('%d / %d' % (self.num_tweets, self.max_tweets), end='\r')
                 f.write(json.dumps(filter_data)+'\n')
 
+                if self.num_tweets % MyListener.USER_FREQ == 0:
+                    self.save_users()
                 # Setting a limit in the number of tweets collected
+
                 if self.num_tweets < self.max_tweets:
                     return True
                 else:
-                    with open(self.user_file, 'a') as uf:
-                        user_data = {user.id: user.to_json() for user in self.users.values()}
-                        uf.write(json.dumps(user_data))
                     return False
 
         except BaseException as e:
             print("Error on_data: %s" % str(e))
         return True
+
+    def save_users(self):
+        with open(self.user_file, 'a') as uf:
+            user_data = {user.id: user.to_json() for user in self.users.values()}
+            uf.write(json.dumps(user_data))
 
     def get_tweet(self, jdata):
         filter_data = {}
@@ -106,9 +111,19 @@ if __name__ == '__main__':
     auth.set_access_token(access_token, access_secret)
     args = parse_args()
     start_time = time.time()
-    twitter_stream = Stream(auth, MyListener(args.N, output_file=args.output))
-    twitter_stream.filter(track=KEYWORDS, languages=['en']) # Add your keywords and other filters
+    listener = MyListener(args.N, output_file=args.output)
+    twitter_stream = Stream(auth, listener)
+    while(listener.num_tweets < args.N):
+        try:
+            twitter_stream.filter(track=KEYWORDS, languages=['en']) # Add your keywords and other filters
+        except:
+            print('Exception at', listener.num_tweets)
+            str = input('Continue? ')
+            if str == 'n': #TODO make better
+                break
+            pass
+    listener.save_users()
     total_time = time.time() - start_time
     print('_______ End _______')
-    print('Tweets: ', args.N)
+    print('Tweets: ', listener.num_tweets)
     print('Total time: ', total_time)
