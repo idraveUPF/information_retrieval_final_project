@@ -4,7 +4,7 @@ In this project we have implemented a search engine for tweets related to the bl
 
 # The structure of the repository is: 
 
-  - Index.py
+  - index.py
   - main.py
   - query.py
   - score.py
