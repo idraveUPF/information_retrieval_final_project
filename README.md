@@ -22,3 +22,4 @@ Arguments:
 -index: pickle file with the index, 
 -K: number of results per query, 
 -custom: use the custom score instead of tf-idf
+-diversity: use the diversity score
