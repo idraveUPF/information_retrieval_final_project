@@ -1,3 +1,4 @@
+import json
 
 class Tweet:
     def __init__(self, id, text, user, date, url,
@@ -14,6 +15,28 @@ class Tweet:
 
     def get_terms(self):
         return self.terms
+
+    @staticmethod
+    def from_json(json_str):
+        tweet_json = json.loads(json_str)
+        return Tweet(
+            tweet_json['ID'], tweet_json['Tweet_text'], tweet_json['UserId'],
+            tweet_json['Date'], tweet_json['URL'], tweet_json['Hashtags'],
+            tweet_json['Likes'], tweet_json['Number_Retweets'], tweet_json['terms']
+        )
+
+    def to_json(self):
+        return {
+            'ID': self.id,
+            'Tweet_text': self.text,
+            'UserId': self.user,
+            'Date': self.date,
+            'URL': self.url,
+            'Hashtags': self.hashtags,
+            'Likes': self.likes,
+            'Number_Retweets': self.retweets,
+            'terms': self.terms
+        }
 
     def tf_idf_score(self, index):
         tweet_v = []

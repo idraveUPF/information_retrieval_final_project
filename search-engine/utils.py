@@ -18,6 +18,9 @@ def get_terms(line):
     stops = set(stopwords.words("english"))
     ## START CODE
     line = line.lower()  ## Transform in lowercase
+    line = re.sub(r'http\S+', '', line)
+    line = re.sub(r'&amp', '', line)
+    line = re.sub(r'\d+', '', line)
     line = re.sub(r'\W', ' ', line)
     line = line.split()  ## Tokenize the text to get a list of terms
     line = [word for word in line if word not in stops]  ##eliminate the stopwords (HINT: use List Comprehension)

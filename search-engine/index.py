@@ -16,6 +16,8 @@ class Index:
         self.df = None
         self.tweets = {}
         self.term_id = {}
+        self.max_fav = 0
+        self.max_rt = 0
 
     def load_json_tweets(self, file):
         with open(file, 'r') as fp:
@@ -55,9 +57,13 @@ class Index:
                 tweet_json['Date'], tweet_json['URL'], tweet_json['Hashtags'],
                 tweet_json['Likes'], tweet_json['Number_Retweets'], tweet_json['terms']
             )
+            if tweet.id in self.tweets:
+                continue
             self.tweets[tweet.id] = tweet
             tweet_id = tweet.id #tweet id
             terms = tweet.terms #page_title + page_text
+            self.max_fav = max(self.max_fav, tweet.likes)
+            self.max_rt = max(self.max_rt, tweet.retweets)
             #title = line_arr[1]            
             #titleIndex[page_id]=title  ## we do not need to apply get terms to title because it used only to print titles and not in the index
             
@@ -187,3 +193,9 @@ class Index:
         num_tweets=len(self.get_tweets(query))
 
         return num_tweets
+
+    def get_max_fav(self):
+        return self.max_fav
+
+    def get_max_rt(self):
+        return self.max_rt

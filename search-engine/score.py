@@ -44,18 +44,18 @@ class CustomScorer:
 
     def score(self, tweet: Tweet, query, index, normalize=True):
         tfidf = TfIdfScorer().score(tweet, query, index, normalize=normalize)
-        tweet.retweets # fav / max(fav), log(fav) / log(max(fav))
         max_fav = index.get_max_fav()
         max_rt = index.get_max_rt()
-        fav_score = math.log(tweet.likes)/math.log(max_fav) # TQM
-        rt_score = math.log(tweet.retweets)/math.log(max_rt)
+        fav_score = math.log(tweet.likes + 1)/(math.log(max_fav + 1) + 1)# TQM
+        rt_score = math.log(tweet.retweets + 1)/(math.log(max_rt + 1) + 1)
         score = tfidf * CustomScorer.W_TFIDF + \
                     fav_score * CustomScorer.W_FAV + \
                     rt_score * CustomScorer.W_RT
         return score
 
 class Word2VecScorer:
-    def __init__(self, sentences=[], size=100, window=5, min_count=1, epochs=5):
+    def __init__(self, tweets=[], size=100, window=5, min_count=1, epochs=5):
+        sentences = [tweet.get_terms() for tweet in tweets]
         self.model = Word2Vec(sentences, size=size, window=window, min_count=min_count, iter=epochs)
 
     def save(self, path):
@@ -67,6 +67,11 @@ class Word2VecScorer:
         word2vec.model = Word2Vec.load(path)
         return word2vec
 
+    def get_tweet_vector(self, tweet):
+        if len(tweet.get_terms()) == 0:
+            return np.zeros(self.model.vector_size)
+        return np.mean([self.get_vector(token) for token in tweet.get_terms()], axis=0)
+
     def get_vector(self, word):
         if word not in self.model.wv.vocab:
             return np.random.uniform(size=len(self.model.vector_size))
@@ -76,6 +81,28 @@ class Word2VecScorer:
         tweet_v = np.mean([self.get_vector(token) for token in tweet.tokens()], axis=0)
         query_v = np.mean([self.get_vector(token) for token in query.get_terms()], axis=0)
         return cosine_similarity(tweet_v, query_v)
+
+class DiversityScore:
+    W_SCORE = 0.8
+    W_DIV = 0.2
+    def __init__(self, base_score):
+        self.base_score = base_score
+
+    def get_diversity(self, tweet, index, ranking):
+        is_in = tweet.id in {id for _, id in ranking}
+        count = (len(ranking) - (1 if is_in else 0))
+        if count == 0:
+            return 0
+        v1 = index.get_tf_idf_vector(tweet.id)
+        total = 0
+        for _, t in ranking:
+            total += cosine_similarity(v1, index.get_tf_idf_vector(t))
+        return 1 - (total / count) # if tweet is in ranking, we take mean over len(ranking)-1, otherwise, over all len(ranking)
+
+    def score(self, tweet, query: Query, index, ranking):
+        score = self.base_score.score(tweet, query, index)
+        diversity = self.get_diversity(tweet, index, ranking)
+        return score * DiversityScore.W_SCORE + diversity * DiversityScore.W_DIV
 
 def rank_tweets(query: Query, index, K=20, scorer=None, log=False):
     scorer = scorer if scorer is not None else TfIdfScorer()
@@ -97,3 +124,35 @@ def rank_tweets(query: Query, index, K=20, scorer=None, log=False):
 
     return [index.tweets[tid] for tid in ranking]
 
+def rank_tweets_diversity(query: Query, index, K=20, scorer=None, log=False):
+
+    scorer = scorer if scorer is not None else TfIdfScorer()
+    heap = []
+    div_score = DiversityScore(scorer)
+
+    def recompute(heap):
+        new_heap = []
+        for _, t_id in heap:
+            new_score = div_score.score(index.tweets[t_id], query, index, heap)
+            heappush(new_heap, (new_score, t_id))
+        return new_heap
+
+    for tweet in index.get_tweets(query):
+        score = div_score.score(tweet, query, index, heap)
+        if len(heap) < K:
+            heappush(heap, (score, tweet.id))
+            heap = recompute(heap)
+        else:
+            t_out = heappushpop(heap, (score, tweet.id))
+            if t_out != tweet.id:
+                heap = recompute(heap)
+    if log:
+        heap2 = list(heap)
+        ranking_scores = [heappop(heap2) for _ in range(len(heap2))]
+        ranking_scores.reverse()
+        for score, tweet in ranking_scores:
+            print(score, index.tweets[tweet].text)
+    ranking = [heappop(heap)[1] for _ in range(len(heap))]
+    ranking.reverse()
+
+    return [index.tweets[tid] for tid in ranking]
