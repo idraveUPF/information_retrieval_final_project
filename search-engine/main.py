@@ -10,22 +10,25 @@ DEFAULT_TWEETS = Path(__file__).parent.parent/'res'/'merge_tweets_wusers.json'
 def parse_main_args():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-index', default=None)
-    group.add_argument('-tweets', default=DEFAULT_TWEETS)
-    parser.add_argument('-K', type=int, default=20)
-    parser.add_argument('-out', default=None)
-    parser.add_argument('-w2v', action='store_true')
-    parser.add_argument('-custom', action='store_true')
-    parser.add_argument('-diversity', action='store_true')
+    group.add_argument('-index', default=None, help='Path to load index .pickle file')
+    group.add_argument('-tweets', default=DEFAULT_TWEETS, help='Path to load json tweet data')
+    parser.add_argument('-K', type=int, default=20, help='Maximum ranking length')
+    parser.add_argument('-out', default=None, help='Path to output tsv query rankings')
+    rmethod = parser.add_mutually_exclusive_group()
+    rmethod.add_argument('-w2v', action='store_true', help='Use word2vec scoring')
+    rmethod.add_argument('-custom', action='store_true', help='Use custom scoring (use likes and retweets)')
+    rmethod.add_argument('-diversity', action='store_true', help='Use diversified output')
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_main_args()
 
     if args.index != None:
+        print('Loading index...')
         index = Index.load(args.index)
     else:
         index = Index()
+        print('Loading tweet info into index...')
         index.load_json_tweets(args.tweets)
 
     stop = False
