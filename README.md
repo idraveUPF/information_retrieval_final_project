@@ -10,16 +10,23 @@ In this project we have implemented a search engine for tweets related to the bl
   - score.py
   - tweet_stream.py
   - tweet.py
+  - heap.py
   - user.py
   - utils.py
 ### Execution
 
 ```sh
-$ python main.py -index -tweets -K -custom -diversity
+$ python main.py -index -tweets -K -out -custom -diversity -w2v -h
 ```
-Arguments:
--tweets: tweets json file, 
--index: pickle file with the index, 
--K: number of results per query, 
--custom: use the custom score instead of tf-idf, 
--diversity: use the diversity score
+Optional arguments:
+- tweets: tweets json file, 
+- index: pickle file with the index, 
+- K: number of results per query, 
+- out: prints the results into a tsv file,
+- custom: use the custom score, 
+- diversity: use the diversity score,
+- w2v: uses word2vec scorer
+- h: help
+
+
+
