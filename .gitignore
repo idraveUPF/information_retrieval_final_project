@@ -2,7 +2,8 @@
 search-engine/test.py
 search-engine/Output.json
 search-engine/index.pickle
-/res
+/res/*
+!/res/merge_tweets_wusers.json
 */__pycache__/*
 */.ipynb_checkpoints/*
 search-engine/merge_tweets.py
