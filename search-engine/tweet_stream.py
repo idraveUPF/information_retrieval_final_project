@@ -94,10 +94,8 @@ def parse_args():
     parser.add_argument('-output', default=None, help='Output json of tweets')
     return parser.parse_args()
 
-#OUTPUT_JSON = Path(__file__).parent.parent.parent/'res'/'Output.json'
-#OUTPUT_USER = Path(__file__).parent.parent.parent/'res'/'Users.json'
-OUTPUT_JSON = Path('/home/ivan/Documents/upf/inforetrieval/finalproject/information_retrieval_final_project/res/Output.json')
-OUTPUT_USER = Path('/home/ivan/Documents/upf/inforetrieval/finalproject/information_retrieval_final_project/res/Users.json')
+OUTPUT_JSON = Path(__file__).parent.parent.parent/'res'/'Output.json'
+OUTPUT_USER = Path(__file__).parent.parent.parent/'res'/'Users.json'
 
 if __name__ == '__main__':
     nltk.download('stopwords')

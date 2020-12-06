@@ -4,6 +4,7 @@ search-engine/Output.json
 search-engine/index.pickle
 /res/*
 !/res/merge_tweets_wusers.json
+!/res/merge_users.json
 */__pycache__/*
 */.ipynb_checkpoints/*
 search-engine/merge_tweets.py

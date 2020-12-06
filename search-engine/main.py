@@ -1,15 +1,17 @@
 from index import Index
 from score import rank_tweets, CustomScorer, rank_tweets_diversity, Word2VecScorer
 from query import Query
-from tweet_stream import OUTPUT_JSON
+from pathlib import Path
 import argparse
 import csv
+
+DEFAULT_TWEETS = Path(__file__).parent.parent/'res'/'merge_tweets_wusers.json'
 
 def parse_main_args():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-index', default=None)
-    group.add_argument('-tweets', default=OUTPUT_JSON)
+    group.add_argument('-tweets', default=DEFAULT_TWEETS)
     parser.add_argument('-K', type=int, default=20)
     parser.add_argument('-out', default=None)
     parser.add_argument('-w2v', action='store_true')

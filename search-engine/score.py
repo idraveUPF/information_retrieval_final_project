@@ -123,8 +123,6 @@ def rank_tweets_diversity(query: Query, index, K=20, scorer=None, log=False):
     scorer = scorer if scorer is not None else TfIdfScorer(index)
     heap = DiversityHeap(scorer, query)
     for i, tweet in enumerate(index.get_tweets(query)):
-        if i % 5000 == 0:
-            print(i)
         if len(heap) < K:
             heap.push(tweet)
         else:
