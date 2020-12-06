@@ -53,7 +53,7 @@ class Index:
         for line in lines: # Remember, lines contain all tweets, each line is a tweet
             tweet_json = json.loads(line)
             tweet = Tweet(
-                tweet_json['ID'], tweet_json['Tweet_text'], tweet_json['UserId'],
+                int(tweet_json['ID']), tweet_json['Tweet_text'], tweet_json['UserId'],
                 tweet_json['Date'], tweet_json['URL'], tweet_json['Hashtags'],
                 tweet_json['Likes'], tweet_json['Number_Retweets'], tweet_json['terms']
             )
@@ -151,7 +151,7 @@ class Index:
             vector[self.term_id[term]] = tf_idf
         norm = np.linalg.norm(vector)
         if norm == 0:
-            return None
+            return np.zeros(len(self.index))
         return vector / norm
 
     def get_all_tf_idf(self):

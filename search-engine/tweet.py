@@ -3,9 +3,9 @@ import json
 class Tweet:
     def __init__(self, id, text, user, date, url,
                  hashtags, likes, retweets, terms):
-        self.id = id
+        self.id = int(id)
         self.text = text
-        self.user = user
+        self.user = int(user)
         self.date = date
         self.url = url
         self.hashtags = hashtags
@@ -49,3 +49,13 @@ class Tweet:
     def __str__(self):
         return ('%s\n %s | %s | %s | %s | %s | %s' %
                 (self.text, self.user, self.date, self.hashtags, self.likes, self.retweets, self.url))
+
+    def row_data(self):
+        return (self.text, self.user, self.date, self.hashtags, self.likes, self.retweets, self.url)
+    def __hash__(self):
+        return self.id # we assume ids are properly assigned to unique tweets
+
+    def __eq__(self, other):
+        if not isinstance(other, Tweet):
+            return False
+        return self.id == other.id # we assume ids are properly assigned to unique tweets
