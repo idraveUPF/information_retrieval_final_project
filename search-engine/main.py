@@ -1,5 +1,5 @@
 from index import Index
-from score import rank_tweets, CustomScorer
+from score import rank_tweets, CustomScorer, rank_tweets_diversity
 from query import Query
 from tweet_stream import OUTPUT_JSON
 import argparse
@@ -11,6 +11,7 @@ def parse_main_args():
     group.add_argument('-tweets', default=OUTPUT_JSON)
     parser.add_argument('-K', type=int, default=20)
     parser.add_argument('-custom', action='store_true')
+    parser.add_argument('-diversity', action='store_true')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -26,9 +27,10 @@ if __name__ == '__main__':
     scorer = None
     if args.custom:
         scorer = CustomScorer()
+    ranker = rank_tweets if not args.diversity else rank_tweets_diversity
     while not stop:
         str_query = input('Write a query: ')
         query = Query(str_query)
-
-        for i, tweet in enumerate(rank_tweets(query, index, K=args.K, scorer=scorer)):
-            print(i+1, '. ', tweet.text)
+        for i, tweet in enumerate(ranker(query, index, K=args.K, scorer=scorer)):
+            print(i+1, '.\n', '-'*100)
+            print(str(tweet))

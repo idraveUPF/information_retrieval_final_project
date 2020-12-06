@@ -47,4 +47,5 @@ class Tweet:
             query_v.append(query_tf[i] * idfs[i])
 
     def __str__(self):
-        pass
+        return ('%s\n %s | %s | %s | %s | %s | %s' %
+                (self.text, self.user, self.date, self.hashtags, self.likes, self.retweets, self.url))

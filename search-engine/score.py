@@ -22,14 +22,18 @@ def cosine_similarity(a, b, norm_a=True, norm_b=True):
     return total / (sum_a * sum_b)
 
 class TfIdfScorer:
-    def __init__(self):
-        pass
-    def score(self, tweet: Tweet, query, index, normalize=True):
+    def __init__(self, index):
+        self.index = index
+
+    def get_tweet_vector(self, tweet):
+        return self.index.get_tf_idf_vector(tweet.id)
+
+    def score(self, tweet: Tweet, query, normalize=True):
         tweet_v = []
         query_v = []
-        tweet_tf = index.get_tf(query, tweet.id)
+        tweet_tf = self.index.get_tf(query, tweet.id)
         query_tf = query.get_tf()
-        idfs = index.get_idf(query)
+        idfs = self.index.get_idf(query)
         for i in range(len(query_tf)):
             tweet_v.append(tweet_tf[i] * idfs[i])
             query_v.append(query_tf[i] * idfs[i])
@@ -39,13 +43,16 @@ class CustomScorer:
     W_TFIDF = .5
     W_FAV = .25
     W_RT = .25
-    def __init__(self):
-        pass
+    def __init__(self, index):
+        self.index = index
 
-    def score(self, tweet: Tweet, query, index, normalize=True):
-        tfidf = TfIdfScorer().score(tweet, query, index, normalize=normalize)
-        max_fav = index.get_max_fav()
-        max_rt = index.get_max_rt()
+    def get_tweet_vector(self, tweet):
+        return self.index.get_tf_idf_vector(tweet.id)
+
+    def score(self, tweet: Tweet, query, normalize=True):
+        tfidf = TfIdfScorer(self.index).score(tweet, query, normalize=normalize)
+        max_fav = self.index.get_max_fav()
+        max_rt = self.index.get_max_rt()
         fav_score = math.log(tweet.likes + 1)/(math.log(max_fav + 1) + 1)# TQM
         rt_score = math.log(tweet.retweets + 1)/(math.log(max_rt + 1) + 1)
         score = tfidf * CustomScorer.W_TFIDF + \
@@ -77,7 +84,7 @@ class Word2VecScorer:
             return np.random.uniform(size=len(self.model.vector_size))
         return self.model.wv[word]
 
-    def score(self, tweet, query: Query, index):
+    def score(self, tweet, query: Query):
         tweet_v = np.mean([self.get_vector(token) for token in tweet.tokens()], axis=0)
         query_v = np.mean([self.get_vector(token) for token in query.get_terms()], axis=0)
         return cosine_similarity(tweet_v, query_v)
@@ -105,10 +112,10 @@ class DiversityScore:
         return score * DiversityScore.W_SCORE + diversity * DiversityScore.W_DIV
 
 def rank_tweets(query: Query, index, K=20, scorer=None, log=False):
-    scorer = scorer if scorer is not None else TfIdfScorer()
+    scorer = scorer if scorer is not None else TfIdfScorer(index)
     heap = []
     for tweet in index.get_tweets(query):
-        score = scorer.score(tweet, query, index)
+        score = scorer.score(tweet, query)
         if len(heap) < K:
             heappush(heap, (score, tweet.id))
         else:
@@ -126,14 +133,14 @@ def rank_tweets(query: Query, index, K=20, scorer=None, log=False):
 
 def rank_tweets_diversity(query: Query, index, K=20, scorer=None, log=False):
 
-    scorer = scorer if scorer is not None else TfIdfScorer()
+    scorer = scorer if scorer is not None else TfIdfScorer(index)
     heap = []
     div_score = DiversityScore(scorer)
 
     def recompute(heap):
         new_heap = []
         for _, t_id in heap:
-            new_score = div_score.score(index.tweets[t_id], query, index, heap)
+            new_score = div_score.score(index.tweets[t_id], query, heap)
             heappush(new_heap, (new_score, t_id))
         return new_heap
 
