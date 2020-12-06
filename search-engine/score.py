@@ -118,40 +118,8 @@ def rank_tweets(query: Query, index, K=20, scorer=None, log=False):
 
     return [index.tweets[tid] for tid in ranking]
 
+
 def rank_tweets_diversity(query: Query, index, K=20, scorer=None, log=False):
-
-    scorer = scorer if scorer is not None else TfIdfScorer(index)
-    heap = []
-    div_score = DiversityScore(scorer)
-
-    def recompute(heap):
-        new_heap = []
-        for _, t_id in heap:
-            new_score = div_score.score(index.tweets[t_id], query, heap)
-            heappush(new_heap, (new_score, t_id))
-        return new_heap
-
-    for tweet in index.get_tweets(query):
-        score = div_score.score(tweet, query, index, heap)
-        if len(heap) < K:
-            heappush(heap, (score, tweet.id))
-            heap = recompute(heap)
-        else:
-            t_out = heappushpop(heap, (score, tweet.id))
-            if t_out != tweet.id:
-                heap = recompute(heap)
-    if log:
-        heap2 = list(heap)
-        ranking_scores = [heappop(heap2) for _ in range(len(heap2))]
-        ranking_scores.reverse()
-        for score, tweet in ranking_scores:
-            print(score, index.tweets[tweet].text)
-    ranking = [heappop(heap)[1] for _ in range(len(heap))]
-    ranking.reverse()
-
-    return [index.tweets[tid] for tid in ranking]
-
-def rank_tweets_diversity2(query: Query, index, K=20, scorer=None, log=False):
     scorer = scorer if scorer is not None else TfIdfScorer(index)
     heap = DiversityHeap(scorer, query)
     for i, tweet in enumerate(index.get_tweets(query)):

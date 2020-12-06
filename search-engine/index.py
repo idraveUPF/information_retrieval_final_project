@@ -4,20 +4,21 @@ import json
 from collections import defaultdict
 import numpy as np
 import pickle
-
+from heapq import heappush, heappushpop
 from tweet import Tweet
 from array import array
 
 class Index:
 
-    def __init__(self):
+    def __init__(self, repr_size=128):
         self.index= None # term --> tweet
         self.tf = None
         self.df = None
         self.tweets = {}
-        self.term_id = {}
         self.max_fav = 0
         self.max_rt = 0
+        self.repr_size = repr_size
+        self.topidf = None
 
     def load_json_tweets(self, file):
         with open(file, 'r') as fp:
@@ -35,7 +36,7 @@ class Index:
 
     def create_index(self, lines):
         """
-        Impleent the inverted index
+        Implement the inverted index
         
         Argument:
         lines -- collection of tweets
@@ -44,7 +45,6 @@ class Index:
         index - the inverted index (implemented through a python dictionary) containing terms as keys and the corresponding 
         list of tweets these keys appears in (and the positions) as values.
         """
-
 
         index=defaultdict(list)
         tf = defaultdict(dict)
@@ -83,8 +83,6 @@ class Index:
             termdictTweets={}
 
             for position, term in enumerate(terms): # terms contains page_title + page_text. Loop over all terms
-                if term not in self.term_id:
-                    self.term_id[term] = len(self.term_id)
                 try:
                     # if the term is already in the index for the current page (termdictPage)
                     # append the position to the corrisponding list
@@ -120,6 +118,13 @@ class Index:
         self.index = index
         self.tf = tf
         self.df = df
+        N = len(self.tweets)
+        self.topidf = []
+        for term, df in self.df.items():
+            if len(self.topidf) < self.repr_size:
+                heappush(self.topidf, (df, term))
+            else:
+                heappushpop(self.topidf, (df, term))
 
     #Given a query (set of words) and and index return the idf of that query
     def get_idf(self, query):
@@ -141,17 +146,16 @@ class Index:
         return term_list
 
     def get_tf_idf_vector(self, tweet_id):
-        vector = np.zeros(len(self.index))
+        vector = np.zeros(self.repr_size)
         N = len(self.tweets)
         total = 0
-        for term in self.tweets[tweet_id].terms:
+        for i, (df, term) in enumerate(self.topidf):
             tf = self.tf[term].get(tweet_id, 0)
-            df = self.df[term]
-            tf_idf = tf * math.log(N / df)
-            vector[self.term_id[term]] = tf_idf
+            tf_idf = tf * math.log(N/df)
+            vector[i] = tf_idf
         norm = np.linalg.norm(vector)
         if norm == 0:
-            return np.zeros(len(self.index))
+            return vector
         return vector / norm
 
     def get_all_tf_idf(self):

@@ -1,5 +1,5 @@
 from index import Index
-from score import rank_tweets, CustomScorer, rank_tweets_diversity2, Word2VecScorer
+from score import rank_tweets, CustomScorer, rank_tweets_diversity, Word2VecScorer
 from query import Query
 from tweet_stream import OUTPUT_JSON
 import argparse
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     if args.custom:
         scorer = CustomScorer(index)
 
-    ranker = rank_tweets if not args.diversity else rank_tweets_diversity2
+    ranker = rank_tweets if not args.diversity else rank_tweets_diversity
 
     while not stop:
         str_query = input('Write a query: ')
