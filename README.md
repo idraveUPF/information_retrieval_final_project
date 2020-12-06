@@ -15,7 +15,7 @@ In this project we have implemented a search engine for tweets related to the bl
 ### Execution
 
 ```sh
-$ python main.py -index -tweets -K -custom
+$ python main.py -index -tweets -K -custom -diversity
 ```
 Arguments:
 -tweets: tweets json file, 
