@@ -10,6 +10,7 @@ In this project we have implemented a search engine for tweets related to the bl
   - score.py
   - tweet_stream.py
   - tweet.py
+  - heap.py
   - user.py
   - utils.py
 ### Execution
